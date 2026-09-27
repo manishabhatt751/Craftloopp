@@ -1,7 +1,7 @@
 const path = require("path");
 const dotenv = require("dotenv");
 
-// Load environment variables from server/.env
+// Load environment variables from server/.env (MongoDB Atlas Connected)
 dotenv.config({
   path: path.join(__dirname, ".env"),
 });
