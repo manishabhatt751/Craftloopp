@@ -46,10 +46,13 @@ import ProjectViewWrapper from './pages/ProjectViewWrapper'
 import PracticePage from './pages/PracticePage'
 
 
+import ErrorBoundary from './Components/ErrorBoundary'
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
 
         {/* =========================
             HOME
@@ -317,6 +320,7 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+  </ErrorBoundary>
   )
 }
 

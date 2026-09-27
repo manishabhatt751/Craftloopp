@@ -176,7 +176,7 @@ const updateCourse = async (req, res) => {
     delete updates.instructor;
 
     const updatedCourse = await Course.findByIdAndUpdate(id, updates, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     })
       .populate("creator", "name email avatar role title")

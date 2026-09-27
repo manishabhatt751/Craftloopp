@@ -8,6 +8,7 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {
@@ -17,6 +18,7 @@ export default defineConfig({
       '/socket.io': {
         target: 'http://localhost:5000',
         ws: true,
+        changeOrigin: true,
       },
       '/uploads': {
         target: 'http://localhost:5000',

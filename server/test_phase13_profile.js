@@ -52,9 +52,8 @@ async function runPhase13Tests() {
   console.log("PHASE 13 PROFILE LIVE INTEGRATION TEST");
   console.log("==================================================\n");
 
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(process.env.MONGODB_URI);
-  }
+  const { connectDB } = require("./config/db");
+  await connectDB();
   console.log(`MongoDB connected: ${mongoose.connection.name} (ReadyState: ${mongoose.connection.readyState})`);
 
   const server = http.createServer(app);

@@ -42,8 +42,13 @@ function TopBar() {
   const storedUser = JSON.parse(localStorage.getItem('craftloop_user') || 'null')
   const storedProfile = JSON.parse(localStorage.getItem('craftloopCreatorProfile') || 'null')
   const creatorName = storedProfile?.name || storedUser?.name || 'Creator'
-  const creatorUsername = storedProfile?.username || (storedUser?.email ? storedUser.email.split('@')[0] : 'creator')
-  const creatorAvatar = storedProfile?.avatar || storedUser?.avatar || 'https://i.pravatar.cc/100?img=47'
+  const creatorUsername =
+    storedProfile?.username ||
+    (storedUser?.email ? storedUser.email.split('@')[0] : 'creator')
+  const creatorAvatar =
+    storedProfile?.avatar ||
+    storedUser?.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=7c3aed&color=fff`
 
   return (
     <header className="fixed left-64 right-0 top-0 z-30 h-20 border-b border-purple-100 bg-white/95 px-8 backdrop-blur">

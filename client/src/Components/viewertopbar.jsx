@@ -44,7 +44,10 @@ function ViewerTopbar() {
   const storedProfile = JSON.parse(localStorage.getItem('craftloopViewerProfile') || 'null')
   const viewerName = storedProfile?.name || storedUser?.name || 'Viewer'
   const viewerUsername = storedProfile?.username || (storedUser?.email ? storedUser.email.split('@')[0] : 'viewer')
-  const viewerAvatar = storedProfile?.avatar || storedUser?.avatar || 'https://i.pravatar.cc/100?img=32'
+  const viewerAvatar =
+    storedProfile?.avatar ||
+    storedUser?.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(viewerName)}&background=7c3aed&color=fff`
 
   return (
     <header className="fixed left-64 right-0 top-0 z-30 flex h-20 items-center justify-between border-b border-purple-100 bg-white/95 px-8 backdrop-blur">

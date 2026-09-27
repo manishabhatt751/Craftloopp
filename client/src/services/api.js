@@ -139,8 +139,8 @@ export const api = {
             bio: user.bio !== undefined ? user.bio : (existing.bio || ''),
             skills: Array.isArray(user.skills)
               ? user.skills.join(', ')
-              : (user.skills || existing.skills || 'UI/UX Design, Graphic Design, Branding'),
-            location: user.location || existing.location || 'India',
+              : (user.skills || existing.skills || ''),
+            location: user.location || existing.location || '',
             avatar: user.avatar !== undefined ? user.avatar : (existing.avatar || ''),
           })
         );

@@ -27,8 +27,8 @@ function ProtectedRoute({ allowedRole, children }) {
   // State: 'checking' | 'authorized' | 'unauthorized' | 'role_mismatch'
   const [authState, setAuthState] = useState(() => {
     if (!token) return 'unauthorized'
-    // If already verified in this session and role matches, allow instantly
-    if (sessionVerifiedUserId && storedRole) {
+    // If token and storedRole exist and match, authorize immediately for smooth transition
+    if (storedRole) {
       if (allowedRole && storedRole !== allowedRole) {
         return 'role_mismatch'
       }

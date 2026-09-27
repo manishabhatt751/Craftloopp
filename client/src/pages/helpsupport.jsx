@@ -38,7 +38,7 @@ function HelpSupport() {
     {
       question: 'Can I contact another creator?',
       answer:
-        'Yes. The Messages section allows you to communicate with other creators. The current version is a frontend demonstration.',
+        'Yes. The Messages section allows you to communicate in real-time with other creators and viewers on CraftLoop.',
     },
   ]
 

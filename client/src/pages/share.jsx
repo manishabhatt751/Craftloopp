@@ -42,13 +42,13 @@ function Share() {
       }
     }).catch(() => {})
 
-    api.getProjects().then((res) => {
+    api.getProjects({ mine: 'true' }).then((res) => {
       if (res && res.data && Array.isArray(res.data)) {
         setStats((prev) => ({ ...prev, projects: res.data.length }))
       }
     }).catch(() => {})
 
-    api.getCourses().then((res) => {
+    api.getCourses({ mine: 'true' }).then((res) => {
       if (res && res.data && Array.isArray(res.data)) {
         setStats((prev) => ({ ...prev, courses: res.data.length }))
       }

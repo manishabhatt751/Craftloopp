@@ -184,7 +184,7 @@ function ViewerProfile() {
               </p>
 
               <p className="mt-2 text-2xl font-bold text-purple-700">
-                5
+                {savedProjectsCount}
               </p>
 
             </div>

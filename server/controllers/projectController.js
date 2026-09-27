@@ -185,7 +185,7 @@ const updateProject = async (req, res) => {
     delete updates.creator;
 
     const updatedProject = await Project.findByIdAndUpdate(id, updates, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).populate("creator", "name email avatar role title");
 

@@ -14,13 +14,13 @@ function EditProfile() {
   const profilePath = isViewer ? '/viewerprofile' : '/profile'
 
   const [formData, setFormData] = useState({
-    name: 'Alex Morgan',
-    username: 'alexmorgan',
-    bio: 'Creative designer passionate about branding, visual storytelling and creating meaningful experiences.',
-    location: 'India',
-    profession: 'Designer',
-    skills: 'UI/UX Design, Graphic Design, Branding, Figma',
-    avatar: '',
+    name: storedUser.name || '',
+    username: storedUser.username || (storedUser.email ? storedUser.email.split('@')[0] : ''),
+    bio: storedUser.bio || '',
+    location: storedUser.location || '',
+    profession: storedUser.title || (isViewer ? 'Viewer' : 'Creator'),
+    skills: Array.isArray(storedUser.skills) ? storedUser.skills.join(', ') : (storedUser.skills || ''),
+    avatar: storedUser.avatar || '',
   })
 
   const showToast = (message, type = 'success') => {
@@ -39,12 +39,12 @@ function EditProfile() {
         if (res && res.success && res.data) {
           const u = res.data
           setFormData({
-            name: u.name || 'Alex Morgan',
-            username: u.username || (u.email ? u.email.split('@')[0] : 'alexmorgan'),
-            bio: u.bio !== undefined ? u.bio : 'Creative designer passionate about branding and visual storytelling.',
-            location: u.location || 'India',
-            profession: u.title || 'Designer',
-            skills: Array.isArray(u.skills) ? u.skills.join(', ') : (u.skills || 'UI/UX Design, Graphic Design, Branding, Figma'),
+            name: u.name || '',
+            username: u.username || (u.email ? u.email.split('@')[0] : ''),
+            bio: u.bio !== undefined ? u.bio : '',
+            location: u.location || '',
+            profession: u.title || (u.role === 'creator' ? 'Creator' : 'Viewer'),
+            skills: Array.isArray(u.skills) ? u.skills.join(', ') : (u.skills || ''),
             avatar: u.avatar || '',
           })
         }

@@ -11,11 +11,10 @@ let io = null;
 function initSocket(httpServer) {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-      ],
+      origin: (origin, callback) => {
+        // Allow all incoming origins (localhost, LAN IPs, 192.168.x.x, deployment URLs, or non-browser clients)
+        callback(null, true);
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },

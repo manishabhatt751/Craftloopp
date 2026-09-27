@@ -14,8 +14,8 @@ function Profile() {
     return {
       name: storedProfile?.name || storedUser?.name || 'Creator',
       username: storedProfile?.username || (storedUser?.email ? storedUser.email.split('@')[0] : 'creator'),
-      bio: storedProfile?.bio || storedUser?.bio || 'CraftLoop Creator showcasing original projects and courses.',
-      location: storedProfile?.location || storedUser?.location || 'India',
+      bio: storedProfile?.bio || storedUser?.bio || '',
+      location: storedProfile?.location || storedUser?.location || '',
       profession: storedProfile?.profession || storedUser?.title || 'Creator',
       skills: Array.isArray(storedProfile?.skills)
         ? storedProfile.skills.join(', ')
@@ -25,24 +25,30 @@ function Profile() {
   })
   const [projects, setProjects] = useState([])
   const [courses, setCourses] = useState([])
+  const [walletBalance, setWalletBalance] = useState(0)
 
   const fetchProfile = async () => {
     try {
       setLoading(true)
       setError(null)
-      const [profRes, projRes, courseRes] = await Promise.all([
+      const [profRes, projRes, courseRes, walletRes] = await Promise.all([
         api.getProfile().catch(() => null),
         api.getProjects({ mine: 'true' }).catch(() => null),
         api.getCourses({ mine: 'true' }).catch(() => null),
+        api.getWallet().catch(() => null),
       ])
+
+      if (walletRes && walletRes.success && typeof walletRes.availableBalance === 'number') {
+        setWalletBalance(walletRes.availableBalance)
+      }
 
       if (profRes && profRes.success && profRes.data) {
         const u = profRes.data
         const mapped = {
           name: u.name || 'Creator',
           username: u.username || (u.email ? u.email.split('@')[0] : 'creator'),
-          bio: u.bio !== undefined ? u.bio : 'CraftLoop Creator showcasing original projects and courses.',
-          location: u.location || 'India',
+          bio: u.bio !== undefined ? u.bio : '',
+          location: u.location || '',
           profession: u.title || 'Creator',
           skills: Array.isArray(u.skills)
             ? u.skills.join(', ')
@@ -171,11 +177,11 @@ function Profile() {
               </div>
 
               <p className="profile-bio">
-                {profile?.bio || 'CraftLoop Creator showcasing original projects and courses.'}
+                {profile?.bio || 'No bio added yet. Click Edit Profile to add one.'}
               </p>
 
               <div className="profile-meta">
-                <span>📍 {profile?.location || 'India'}</span>
+                {profile?.location ? <span>📍 {profile.location}</span> : null}
                 <span>🎨 {profile?.profession || 'Creator'}</span>
                 <span>✨ Available for work</span>
               </div>
@@ -371,44 +377,27 @@ function Profile() {
 
               </div>
 
-              <div className="skill-progress">
-
-                <div>
-                  <span>UI/UX Design</span>
-                  <strong>85%</strong>
-                </div>
-
-                <div className="progress-track">
-                  <div className="progress-fill progress-85"></div>
-                </div>
-
-              </div>
-
-              <div className="skill-progress">
-
-                <div>
-                  <span>Graphic Design</span>
-                  <strong>78%</strong>
-                </div>
-
-                <div className="progress-track">
-                  <div className="progress-fill progress-78"></div>
-                </div>
-
-              </div>
-
-              <div className="skill-progress">
-
-                <div>
-                  <span>Branding</span>
-                  <strong>72%</strong>
-                </div>
-
-                <div className="progress-track">
-                  <div className="progress-fill progress-72"></div>
-                </div>
-
-              </div>
+              {skills.length > 0 ? (
+                skills.slice(0, 3).map((skill, index) => {
+                  const percent = index === 0 ? 85 : index === 1 ? 78 : 70;
+                  return (
+                    <div className="skill-progress" key={skill}>
+                      <div>
+                        <span>{skill}</span>
+                        <strong>{percent}%</strong>
+                      </div>
+                      <div className="progress-track">
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-xs text-gray-400 py-3">No skills added yet.</p>
+              )}
 
             </div>
 
@@ -425,7 +414,7 @@ function Profile() {
 
               <p>Available balance</p>
 
-              <h2>₹12,450</h2>
+              <h2>₹{walletBalance.toLocaleString('en-IN')}</h2>
 
               <button
                 type="button"
@@ -454,31 +443,21 @@ function Profile() {
 
               </div>
 
-              <div className="mini-project">
-
-                <div className="mini-project-icon">
-                  ✦
-                </div>
-
-                <div>
-                  <h4>Brand Identity</h4>
-                  <p>Published</p>
-                </div>
-
-              </div>
-
-              <div className="mini-project">
-
-                <div className="mini-project-icon second">
-                  ✦
-                </div>
-
-                <div>
-                  <h4>Poster Collection</h4>
-                  <p>Draft</p>
-                </div>
-
-              </div>
+              {projects.length > 0 ? (
+                projects.slice(0, 2).map((proj, idx) => (
+                  <div className="mini-project" key={proj._id || proj.id || idx}>
+                    <div className={`mini-project-icon ${idx === 1 ? 'second' : ''}`}>
+                      ✦
+                    </div>
+                    <div>
+                      <h4 className="truncate">{proj.title}</h4>
+                      <p>{proj.status || 'Published'}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 py-3">No projects created yet.</p>
+              )}
 
             </div>
 

@@ -36,12 +36,14 @@ function SkillProfile() {
     .map((skill) => skill.trim())
     .filter(Boolean)
 
-  const [tools, setTools] = useState([
-    'Figma',
-    'Canva',
-    'Adobe Photoshop',
-    'Adobe Illustrator',
-  ])
+  const [tools, setTools] = useState(() => {
+    try {
+      const saved = localStorage.getItem('craftloopCreatorTools')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
 
   const [showToolInput, setShowToolInput] = useState(false)
   const [newTool, setNewTool] = useState('')
@@ -64,7 +66,11 @@ function SkillProfile() {
       return
     }
 
-    setTools((prev) => [...prev, trimmedTool])
+    setTools((prev) => {
+      const updated = [...prev, trimmedTool]
+      localStorage.setItem('craftloopCreatorTools', JSON.stringify(updated))
+      return updated
+    })
     setNewTool('')
     setShowToolInput(false)
   }
@@ -218,15 +224,21 @@ function SkillProfile() {
 
             <div className="tools-list">
 
-              {tools.map((tool) => (
-                <div
-                  className="tool-item"
-                  key={tool}
-                >
-                  <span>✦</span>
-                  {tool}
-                </div>
-              ))}
+              {tools.length > 0 ? (
+                tools.map((tool) => (
+                  <div
+                    className="tool-item"
+                    key={tool}
+                  >
+                    <span>✦</span>
+                    {tool}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 py-2">
+                  No tools added yet. Click + Add Tool below to list the creative tools you use.
+                </p>
+              )}
 
             </div>
 

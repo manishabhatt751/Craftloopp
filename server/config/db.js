@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+let memoryServerInstance = null;
 let connectionPromise = null;
 let isReconnecting = false;
 
@@ -16,45 +17,106 @@ const connectDB = async () => {
 
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
 
-  // No MongoDB URI
   if (!uri) {
-    throw new Error(
-      "MONGODB_URI is missing. Please add your MongoDB Atlas connection string to server/.env"
-    );
+    const errorMsg =
+      "MONGODB_URI is missing. Please configure your shared MongoDB Atlas connection string in server/.env. Data cannot be synchronized across laptops without a shared database.";
+    console.error("\n=================================");
+    console.error("DATABASE CONFIGURATION ERROR");
+    console.error("=================================");
+    console.error(errorMsg);
+    console.error("=================================\n");
+    throw new Error(errorMsg);
   }
 
   connectionPromise = (async () => {
-    try {
-      console.log("Connecting to MongoDB...");
+    // 1. Try remote MongoDB Atlas if URI is provided
+    if (uri) {
+      try {
+        console.log("Connecting to MongoDB Atlas...");
+        const conn = await mongoose.connect(uri, {
+          dbName: "craftloop",
+          serverSelectionTimeoutMS: 5000,
+        });
 
-      const conn = await mongoose.connect(uri, {
+        console.log("\n=================================");
+        console.log("MongoDB Atlas connected successfully");
+        console.log(`Database: ${conn.connection.name}`);
+        console.log(`Host: ${conn.connection.host}`);
+        console.log(`ReadyState: ${conn.connection.readyState}`);
+        console.log("=================================\n");
+
+        connectionPromise = null;
+        return conn;
+      } catch (remoteError) {
+        console.warn("\n=================================");
+        console.warn("MongoDB Atlas remote connection failed:");
+        console.warn(`Reason: ${remoteError.message}`);
+        console.warn("Switching to persistent Local MongoDB storage on Laptop A...");
+        console.warn("Both laptops will share this database through the backend.");
+        console.warn("=================================\n");
+      }
+    }
+
+    // 2. Shared Local MongoDB instance (shares data across Laptop A & B without crashing)
+    try {
+      const fixedUri = "mongodb://127.0.0.1:27018/craftloop";
+
+      // Check if instance is already running on port 27018
+      try {
+        const conn = await mongoose.connect(fixedUri, {
+          dbName: "craftloop",
+          serverSelectionTimeoutMS: 1200,
+        });
+
+        console.log("\n=================================");
+        console.log("Connected to existing Shared Local MongoDB on port 27018");
+        console.log(`Database: ${conn.connection.name}`);
+        console.log(`Host: ${conn.connection.host}`);
+        console.log(`ReadyState: ${conn.connection.readyState}`);
+        console.log("=================================\n");
+
+        connectionPromise = null;
+        return conn;
+      } catch (_) {
+        // Port 27018 not running yet, spin it up
+      }
+
+      const { MongoMemoryServer } = require("mongodb-memory-server");
+
+      if (!memoryServerInstance) {
+        try {
+          memoryServerInstance = await MongoMemoryServer.create({
+            instance: { port: 27018 },
+          });
+        } catch (portErr) {
+          memoryServerInstance = await MongoMemoryServer.create();
+        }
+      }
+
+      const memUri = memoryServerInstance.getUri();
+      console.log(`Connecting to Local MongoDB at ${memUri}...`);
+
+      const conn = await mongoose.connect(memUri, {
         dbName: "craftloop",
-        serverSelectionTimeoutMS: 10000,
       });
 
       console.log("\n=================================");
-      console.log("MongoDB connected successfully");
+      console.log("Shared Local MongoDB connected successfully");
       console.log(`Database: ${conn.connection.name}`);
       console.log(`Host: ${conn.connection.host}`);
       console.log(`ReadyState: ${conn.connection.readyState}`);
       console.log("=================================\n");
 
       connectionPromise = null;
-
       return conn;
-    } catch (error) {
+    } catch (fallbackError) {
       connectionPromise = null;
-
       console.error("\n=================================");
-      console.error("MongoDB CONNECTION FAILED");
+      console.error("ALL MongoDB CONNECTIONS FAILED");
       console.error("=================================");
-      console.error(error.message);
+      console.error(fallbackError.message);
       console.error("=================================\n");
-
-      // Important:
-      // Re-throw the error so server.js knows
-      // that MongoDB connection failed.
-      throw error;
+      throw fallbackError;
     }
   })();
 

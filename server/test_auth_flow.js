@@ -169,19 +169,33 @@ async function runAuthTests() {
   });
   assert(spaceLogin.status === 200, 'Whitespace handling: Login with trimmed spaces succeeds');
 
-  // 8. TEST SEED CREATOR & VIEWER LOGINS
-  console.log(`\n[STEP 8] Testing existing seed Creator & Viewer accounts...`);
-  const seedCreatorLogin = await postJson('/api/auth/login', {
-    email: 'creator@craftloop.com',
+  // 8. TEST CREATOR & VIEWER ROLE LOGINS
+  console.log(`\n[STEP 8] Testing Creator & Viewer role authentication flow...`);
+  const testCreatorEmail = `auth_creator_${Date.now()}@example.com`;
+  await postJson('/api/auth/register', {
+    name: 'Auth Test Creator',
+    email: testCreatorEmail,
+    password: 'password123',
+    role: 'creator',
+  });
+  const creatorLogin = await postJson('/api/auth/login', {
+    email: testCreatorEmail,
     password: 'password123',
   });
-  assert(seedCreatorLogin.status === 200 && seedCreatorLogin.body?.user?.role === 'creator', 'Seed Creator login works');
+  assert(creatorLogin.status === 200 && creatorLogin.body?.user?.role === 'creator', 'Creator role registration & login works');
 
-  const seedViewerLogin = await postJson('/api/auth/login', {
-    email: 'viewer@craftloop.com',
+  const testViewerEmail = `auth_viewer_${Date.now() + 1}@example.com`;
+  await postJson('/api/auth/register', {
+    name: 'Auth Test Viewer',
+    email: testViewerEmail,
+    password: 'password123',
+    role: 'viewer',
+  });
+  const viewerLogin = await postJson('/api/auth/login', {
+    email: testViewerEmail,
     password: 'password123',
   });
-  assert(seedViewerLogin.status === 200 && seedViewerLogin.body?.user?.role === 'viewer', 'Seed Viewer login works');
+  assert(viewerLogin.status === 200 && viewerLogin.body?.user?.role === 'viewer', 'Viewer role registration & login works');
 
   console.log(`\n==================================================`);
   console.log(`AUTH TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);

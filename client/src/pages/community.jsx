@@ -2,63 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 
-const defaultPosts = [
-  {
-    id: '1',
-    name: 'Maya Creative',
-    username: 'mayacreative',
-    role: 'Graphic Designer',
-    category: 'Design',
-    time: '2 hours ago',
-    content:
-      'Just finished a new branding project! I would love to hear your thoughts on the color combination and overall visual direction.',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-    likes: 24,
-    comments: 2,
-    liked: false,
-    saved: false,
-    commentsList: [
-      {
-        id: '101',
-        author: 'Arjun Sharma',
-        username: 'arjuncreates',
-        time: '1 hour ago',
-        text: 'The gradient transitions are super clean! What software did you use?',
-      },
-      {
-        id: '102',
-        author: 'Sarah Studio',
-        username: 'sarahstudio',
-        time: '30 mins ago',
-        text: 'Love the purple and pastel tones. Great work!',
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Arjun Sharma',
-    username: 'arjuncreates',
-    role: 'UI/UX Designer',
-    category: 'UI/UX',
-    time: '5 hours ago',
-    content:
-      'What is one design tool you cannot work without? For me, Figma has completely changed the way I build interfaces.',
-    image: null,
-    likes: 18,
-    comments: 1,
-    liked: false,
-    saved: false,
-    commentsList: [
-      {
-        id: '201',
-        author: 'Maya Creative',
-        username: 'mayacreative',
-        time: '3 hours ago',
-        text: '100% Figma for collaborative design systems!',
-      },
-    ],
-  },
-]
+
 
 // Safe local storage JSON getter
 const safeGetJSON = (key, fallback) => {
@@ -162,9 +106,9 @@ function Community() {
   const [creatorProfile, setCreatorProfile] = useState(() => {
     return (
       safeGetJSON('craftloopCreatorProfile', null) || {
-        name: 'Alex Morgan',
-        username: 'alexmorgan',
-        profession: 'Creator',
+        name: currentUser?.name || 'Creator',
+        username: currentUser?.email ? currentUser.email.split('@')[0] : 'creator',
+        profession: currentUser?.title || (userRole === 'creator' ? 'Creator' : 'Member'),
       }
     )
   })

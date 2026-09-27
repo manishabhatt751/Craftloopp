@@ -127,7 +127,7 @@ router.post("/", protect, (req, res, next) => {
       url: result.url,
       secure_url: result.secure_url,
       avatar: result.url,
-      user: updatedUser || (req.user ? { ...req.user.toObject(), avatar: result.url } : undefined),
+      user: updatedUser || (req.user ? { ...(typeof req.user.toObject === "function" ? req.user.toObject() : req.user), avatar: result.url } : undefined),
       data: updatedUser || { avatar: result.url },
       format: result.format,
       bytes: result.bytes,
