@@ -39,9 +39,15 @@ export function getSocket() {
 
   const serverUrl =
     import.meta.env.VITE_SOCKET_URL ||
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    (typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
       ? 'http://localhost:5000'
-      : undefined); // undefined uses window.location.origin
+      : typeof window !== 'undefined' &&
+        (window.location.hostname.endsWith('.vercel.app') ||
+          window.location.hostname.endsWith('.netlify.app') ||
+          window.location.hostname.endsWith('.github.io'))
+        ? 'https://craftloopp.onrender.com'
+        : undefined); // undefined uses window.location.origin
 
   socketInstance = io(serverUrl, {
     auth: {

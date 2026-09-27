@@ -3,7 +3,28 @@
  * Standardizes communication with the Express backend
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim();
+  }
+
+  // If accessed from a separate static host like Vercel, Netlify, or GitHub Pages
+  if (typeof window !== 'undefined' && window.location) {
+    const host = window.location.hostname;
+    if (
+      host.endsWith('.vercel.app') ||
+      host.endsWith('.netlify.app') ||
+      host.endsWith('.github.io')
+    ) {
+      return 'https://craftloopp.onrender.com/api';
+    }
+  }
+
+  return '/api';
+};
+
+const BASE_URL = getApiBaseUrl();
 
 /**
  * Generic fetch wrapper
@@ -64,7 +85,7 @@ export async function apiRequest(endpoint, options = {}) {
       } else if (response.status === 403) {
         errorMsg = 'You do not have permission to perform this action.';
       } else if (response.status === 404) {
-        errorMsg = (data && data.message) || 'Requested resource not found.';
+        errorMsg = (data && data.message) || 'Backend API endpoint not found (404). Please ensure the backend is connected.';
       } else if (response.status === 500) {
         errorMsg = (data && data.message) || 'Internal server error. Please try again.';
       } else if (response.status === 502) {

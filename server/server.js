@@ -112,21 +112,40 @@ app.get("/uploads/:filename", (req, res, next) => {
 app.use("/uploads", express.static(uploadsPath));
 
 // ===============================
-// Base Route
-// ===============================
-
-app.get("/", (req, res) => {
-  res.json({
-    message: "CraftLoop Backend is running!",
-    apiDocs: "/api",
-  });
-});
-
-// ===============================
 // API Routes
 // ===============================
 
 app.use("/api", apiRoutes);
+
+// ===============================
+// Serve Static Frontend (Render / Production)
+// ===============================
+
+const clientDistPath = path.join(__dirname, "../client/dist");
+if (fs.existsSync(clientDistPath)) {
+  // Serve static assets from Vite build
+  app.use(express.static(clientDistPath));
+
+  // SPA fallback for all non-API and non-uploads GET requests
+  app.get("/{*splat}", (req, res, next) => {
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/uploads") ||
+      req.path.startsWith("/socket.io")
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+} else {
+  // Fallback for development if client is not built
+  app.get("/", (req, res) => {
+    res.json({
+      message: "CraftLoop Backend is running!",
+      apiDocs: "/api",
+    });
+  });
+}
 
 // ===============================
 // Error Handling
