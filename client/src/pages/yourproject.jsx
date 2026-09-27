@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import ShareProjectModal from '../Components/ShareProjectModal'
 
 const isVideoUrl = (url = '') => {
   if (!url) return false
@@ -23,6 +24,9 @@ function YourProject() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
+  const [sharingProject, setSharingProject] = useState(null)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   const fetchProjects = async () => {
     try {
@@ -57,22 +61,36 @@ function YourProject() {
       ? projects
       : projects.filter((project) => project.status === filter)
 
-  const handleShare = async (project) => {
-    const text = `Check out my CraftLoop project: ${project.title}`
+  const handleCopyLink = async (project, e) => {
+    if (e) e.stopPropagation()
+    const projId = project._id || project.id
+    const projectUrl = `${window.location.origin}/project/${projId}`
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: project.title,
-          text,
-        })
-      } catch {
-        // User cancelled sharing
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(projectUrl)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = projectUrl
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
       }
-    } else {
-      await navigator.clipboard.writeText(text)
-      alert('Project details copied!')
+      setCopiedId(projId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      alert('Project link: ' + projectUrl)
     }
+  }
+
+  const handleOpenShareModal = (project, e) => {
+    if (e) e.stopPropagation()
+    setSharingProject(project)
+    setIsShareModalOpen(true)
   }
 
   const handleDelete = async (id) => {
@@ -192,7 +210,11 @@ function YourProject() {
               >
 
                 {/* Media / Video / Image / Placeholder */}
-                <div className="flex h-48 items-center justify-center overflow-hidden bg-black">
+                <div
+                  onClick={() => navigate(`/project/${projId}`)}
+                  className="cursor-pointer flex h-48 items-center justify-center overflow-hidden bg-black"
+                  title="Click to view project details"
+                >
                   {project.image ? (
                     isVideoUrl(project.image) ? (
                       <video
@@ -206,7 +228,7 @@ function YourProject() {
                       <img
                         src={project.image}
                         alt={project.title}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition hover:scale-105 duration-300"
                       />
                     )
                   ) : (
@@ -233,7 +255,11 @@ function YourProject() {
                     </span>
                   </div>
 
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2
+                    onClick={() => navigate(`/project/${projId}`)}
+                    className="cursor-pointer text-xl font-bold text-gray-900 transition hover:text-purple-600"
+                    title="Click to view project details"
+                  >
                     {project.title}
                   </h2>
 
@@ -263,29 +289,46 @@ function YourProject() {
                     </div>
                   )}
 
-                  {/* Buttons */}
-                  <div className="mt-5 flex gap-2">
-                    <button
-                      onClick={() => navigate('/create', { state: { editProject: project } })}
-                      className="flex-1 rounded-lg border border-purple-200 px-3 py-2 text-sm font-semibold text-purple-600 hover:bg-purple-50"
-                    >
-                      Edit
-                    </button>
+                  {/* Action Buttons */}
+                  <div className="mt-5 space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/create', { state: { editProject: project } })}
+                        className="flex-1 rounded-xl border border-gray-200 bg-white py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition shadow-2xs"
+                      >
+                        Edit Project
+                      </button>
 
-                    <button
-                      onClick={() => handleShare(project)}
-                      className="flex-1 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700"
-                    >
-                      Share
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(projId)}
+                        disabled={deletingId === projId}
+                        className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {deletingId === projId ? '...' : 'Delete'}
+                      </button>
+                    </div>
 
-                    <button
-                      onClick={() => handleDelete(projId)}
-                      disabled={deletingId === projId}
-                      className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      {deletingId === projId ? '...' : 'Delete'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyLink(project, e)}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50/70 py-2.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
+                      >
+                        <span>{copiedId === projId ? '✓' : '🔗'}</span>
+                        <span>{copiedId === projId ? '✓ Copied' : '🔗 Copy Link'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenShareModal(project, e)}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 py-2.5 text-xs font-bold text-white hover:bg-purple-700 transition shadow-xs"
+                      >
+                        <span>💬</span>
+                        <span>Share to Community</span>
+                      </button>
+                    </div>
                   </div>
 
                 </div>
@@ -294,6 +337,16 @@ function YourProject() {
           })}
         </div>
       )}
+
+      {/* Share to Community Modal */}
+      <ShareProjectModal
+        isOpen={isShareModalOpen}
+        onClose={() => {
+          setIsShareModalOpen(false)
+          setSharingProject(null)
+        }}
+        project={sharingProject}
+      />
     </div>
   )
 }

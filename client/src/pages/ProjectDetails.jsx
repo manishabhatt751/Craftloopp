@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import ShareProjectModal from '../Components/ShareProjectModal'
 
 const isVideoUrl = (url = '') => {
   if (!url) return false
@@ -24,6 +25,7 @@ function ProjectDetails() {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const currentRole = localStorage.getItem('craftloopRole') || 'creator'
   const currentUser = (() => {
@@ -87,27 +89,26 @@ function ProjectDetails() {
     }
   }
 
-  const handleShare = async () => {
-    const shareUrl = window.location.href
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: project?.title || 'CraftLoop Project',
-          text: `Check out ${project?.title} on CraftLoop!`,
-          url: shareUrl,
-        })
-        return
-      } catch {
-        // Ignored
-      }
-    }
-
+  const handleCopyLink = async () => {
+    const projectUrl = `${window.location.origin}/project/${id}`
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(projectUrl)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = projectUrl
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
       setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
-      alert('Project link: ' + shareUrl)
+      alert('Project link: ' + projectUrl)
     }
   }
 
@@ -160,14 +161,24 @@ function ProjectDetails() {
           <span>Back</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={handleShare}
-            className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+            onClick={handleCopyLink}
+            className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
           >
-            <span>↗</span>
-            <span>{copied ? 'Copied Link!' : 'Share Project'}</span>
+            <span>{copied ? '✓' : '🔗'}</span>
+            <span>{copied ? 'Copied' : 'Copy Link'}</span>
           </button>
+
+          {isOwner && (
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700"
+            >
+              <span>💬</span>
+              <span>Share to Community</span>
+            </button>
+          )}
 
           <button
             onClick={handleToggleSave}
@@ -238,6 +249,39 @@ function ProjectDetails() {
           <h1 className="mt-4 text-2xl font-extrabold text-gray-900 sm:text-3xl">
             {project.title}
           </h1>
+
+          {/* Project Quick Action Buttons */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => navigate('/create', { state: { editProject: project } })}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-800 transition hover:bg-gray-50 shadow-xs"
+              >
+                Edit Project
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-xs font-bold text-purple-700 transition hover:bg-purple-100 shadow-xs"
+            >
+              <span>{copied ? '✓' : '🔗'}</span>
+              <span>{copied ? 'Copied' : 'Copy Link'}</span>
+            </button>
+
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-200 transition hover:bg-purple-700"
+              >
+                <span>💬</span>
+                <span>Share to Community</span>
+              </button>
+            )}
+          </div>
 
           {/* Creator Profile Row */}
           <div className="mt-6 flex items-center justify-between border-y border-gray-100 py-4">
@@ -315,6 +359,13 @@ function ProjectDetails() {
           )}
         </div>
       </div>
+
+      {/* Share to Community Modal */}
+      <ShareProjectModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        project={project}
+      />
     </div>
   )
 }
